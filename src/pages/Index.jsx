@@ -1,21 +1,38 @@
-import { useState } from "react";
-import { Cat, Heart, Info, Paw } from "lucide-react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { Cat, Heart, Info, Paw, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const catBreeds = [
-  { name: "Siamese", origin: "Thailand", temperament: "Vocal, Affectionate, Intelligent" },
-  { name: "Persian", origin: "Iran", temperament: "Gentle, Quiet, Docile" },
-  { name: "Maine Coon", origin: "United States", temperament: "Gentle, Intelligent, Independent" },
-  { name: "Bengal", origin: "United States", temperament: "Energetic, Playful, Curious" },
-  { name: "Scottish Fold", origin: "Scotland", temperament: "Sweet, Quiet, Adaptable" },
+  { name: "Siamese", origin: "Thailand", temperament: "Vocal, Affectionate, Intelligent", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg" },
+  { name: "Persian", origin: "Iran", temperament: "Gentle, Quiet, Docile", image: "https://upload.wikimedia.org/wikipedia/commons/1/15/White_Persian_Cat.jpg" },
+  { name: "Maine Coon", origin: "United States", temperament: "Gentle, Intelligent, Independent", image: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Maine_Coon_cat_by_Tomitheos.JPG" },
+  { name: "Bengal", origin: "United States", temperament: "Energetic, Playful, Curious", image: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Paintedcats_Red_Star_standing.jpg" },
+  { name: "Scottish Fold", origin: "Scotland", temperament: "Sweet, Quiet, Adaptable", image: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Adult_Scottish_Fold.jpg" },
+];
+
+const catFacts = [
+  "Cats sleep for about 70% of their lives.",
+  "A cat's hearing is much more sensitive than humans and dogs.",
+  "Cats have over 20 vocalizations, including the famous meow.",
+  "The first cat in space was a French cat named Felicette in 1963.",
+  "Cats can jump up to six times their length.",
 ];
 
 const Index = () => {
   const [likes, setLikes] = useState(0);
+  const [currentFactIndex, setCurrentFactIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentFactIndex((prevIndex) => (prevIndex + 1) % catFacts.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100 p-8">
@@ -23,26 +40,42 @@ const Index = () => {
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-6xl mx-auto"
       >
-        <h1 className="text-5xl font-bold mb-6 flex items-center justify-center text-purple-800">
+        <motion.h1 
+          className="text-6xl font-bold mb-6 flex items-center justify-center text-purple-800"
+          initial={{ scale: 0.5 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        >
           <Cat className="mr-2 text-pink-500" /> Feline Fascination
-        </h1>
-        <Card className="mb-8">
-          <CardContent className="p-0">
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg"
-              alt="A cute cat"
-              className="mx-auto object-cover w-full h-[400px] rounded-t-lg"
-            />
-          </CardContent>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Meet Your New Best Friend</CardTitle>
-            <CardDescription className="text-center">
-              Cats: Nature's perfect blend of cuddles and mischief
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        </motion.h1>
+        
+        <Carousel className="mb-8">
+          <CarouselContent>
+            {catBreeds.map((breed, index) => (
+              <CarouselItem key={index}>
+                <Card>
+                  <CardContent className="p-0">
+                    <img
+                      src={breed.image}
+                      alt={breed.name}
+                      className="mx-auto object-cover w-full h-[400px] rounded-t-lg"
+                    />
+                  </CardContent>
+                  <CardHeader>
+                    <CardTitle className="text-2xl text-center">{breed.name}</CardTitle>
+                    <CardDescription className="text-center">
+                      Origin: {breed.origin} | Temperament: {breed.temperament}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
 
         <Tabs defaultValue="about" className="mb-8">
           <TabsList className="grid w-full grid-cols-3">
@@ -73,10 +106,17 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  <li className="flex items-center"><Paw className="mr-2 text-pink-500" /> Retractable claws for silent hunting</li>
-                  <li className="flex items-center"><Paw className="mr-2 text-pink-500" /> Exceptional balance and agility</li>
-                  <li className="flex items-center"><Paw className="mr-2 text-pink-500" /> Keen night vision and sensitive whiskers</li>
-                  <li className="flex items-center"><Paw className="mr-2 text-pink-500" /> Complex vocal communication</li>
+                  {["Retractable claws for silent hunting", "Exceptional balance and agility", "Keen night vision and sensitive whiskers", "Complex vocal communication"].map((feature, index) => (
+                    <motion.li 
+                      key={index} 
+                      className="flex items-center"
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Paw className="mr-2 text-pink-500" /> {feature}
+                    </motion.li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -90,7 +130,13 @@ const Index = () => {
               <CardContent>
                 <ul className="space-y-4">
                   {catBreeds.map((breed, index) => (
-                    <li key={index} className="border-b pb-2 last:border-b-0">
+                    <motion.li 
+                      key={index} 
+                      className="border-b pb-2 last:border-b-0"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
                       <h3 className="font-semibold text-lg">{breed.name}</h3>
                       <p className="text-sm text-gray-600">Origin: {breed.origin}</p>
                       <div className="mt-1">
@@ -98,7 +144,7 @@ const Index = () => {
                           <Badge key={i} variant="secondary" className="mr-1 mb-1">{trait}</Badge>
                         ))}
                       </div>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
               </CardContent>
@@ -113,9 +159,18 @@ const Index = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg text-gray-700 text-center">
-              A group of cats is called a "clowder," and they can make over 100 different vocal sounds!
-            </p>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={currentFactIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="text-lg text-gray-700 text-center"
+              >
+                {catFacts[currentFactIndex]}
+              </motion.p>
+            </AnimatePresence>
           </CardContent>
         </Card>
 
@@ -130,6 +185,15 @@ const Index = () => {
             Show Some Love ({likes})
           </Button>
         </div>
+
+        <motion.div 
+          className="mt-8 text-center text-gray-600"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          <p>Made with <Heart className="inline-block text-red-500" /> by cat enthusiasts</p>
+        </motion.div>
       </motion.div>
     </div>
   );
