@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
-import { Cat, Heart, Info, Paw, Star } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Cat, Heart, Info, Paw, Star, Music, Volume2, VolumeX } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
 import confetti from 'canvas-confetti';
 
 const catBreeds = [
@@ -29,6 +31,10 @@ const Index = () => {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [trail, setTrail] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  const audioRef = useRef(null);
+  const controls = useAnimation();
 
   const y = useMotionValue(0);
   const backgroundY = useTransform(y, [0, -300], [0, 100]);
@@ -57,7 +63,37 @@ const Index = () => {
       spread: 70,
       origin: { y: 0.6 }
     });
+    controls.start({
+      scale: [1, 1.2, 1],
+      transition: { duration: 0.3 }
+    });
+    toast.success("Thanks for the love!", {
+      description: "You're paw-some!",
+      icon: <Heart className="text-red-500" />,
+    });
   };
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleVolumeChange = (newVolume) => {
+    setVolume(newVolume[0]);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume[0];
+    }
+  };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100 p-8 overflow-hidden" onMouseMove={(e) => y.set(e.clientY)}>
@@ -70,6 +106,21 @@ const Index = () => {
           y: backgroundY
         }}
       />
+      <audio ref={audioRef} loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg" />
+      </audio>
+      <div className="fixed bottom-4 right-4 z-50 flex items-center space-x-2 bg-white bg-opacity-70 backdrop-blur-md p-2 rounded-full">
+        <Button variant="ghost" size="icon" onClick={togglePlay}>
+          {isPlaying ? <VolumeX /> : <Volume2 />}
+        </Button>
+        <Slider
+          className="w-24"
+          value={[volume]}
+          max={1}
+          step={0.01}
+          onValueChange={handleVolumeChange}
+        />
+      </div>
       {trail.map((point, index) => (
         <motion.div
           key={index}
@@ -256,15 +307,17 @@ const Index = () => {
         </Card>
 
         <div className="text-center">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleLikeClick}
-            className="group transition-all duration-300 ease-in-out transform hover:scale-105 bg-white bg-opacity-70 backdrop-blur-md"
-          >
-            <Heart className="mr-2 text-red-500 group-hover:animate-ping" />
-            Show Some Love ({likes})
-          </Button>
+          <motion.div animate={controls}>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleLikeClick}
+              className="group transition-all duration-300 ease-in-out transform hover:scale-105 bg-white bg-opacity-70 backdrop-blur-md"
+            >
+              <Heart className="mr-2 text-red-500 group-hover:animate-ping" />
+              Show Some Love ({likes})
+            </Button>
+          </motion.div>
         </div>
 
         <motion.div 
@@ -276,6 +329,24 @@ const Index = () => {
           <p className="bg-white bg-opacity-70 backdrop-blur-md inline-block px-4 py-2 rounded-full">
             Made with <Heart className="inline-block text-red-500" /> by cat enthusiasts
           </p>
+        </motion.div>
+
+        <motion.div
+          className="fixed bottom-4 left-4 z-50"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-white bg-opacity-70 backdrop-blur-md"
+            onClick={() => toast.success("Meow! You've discovered a secret button!", {
+              description: "Keep exploring for more surprises!",
+              icon: <Cat className="text-purple-500" />,
+            })}
+          >
+            <Paw className="text-purple-500" />
+          </Button>
         </motion.div>
       </motion.div>
     </div>
