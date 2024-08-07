@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Cat, Heart, Info, Paw, Star, Music, Volume2, VolumeX } from "lucide-react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Cat, Heart, Info, Paw, Star, Music, Volume2, VolumeX, Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import confetti from 'canvas-confetti';
+import { useTheme } from "next-themes";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const catBreeds = [
   { name: "Siamese", origin: "Thailand", temperament: "Vocal, Affectionate, Intelligent", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg" },
@@ -33,11 +35,29 @@ const Index = () => {
   const [trail, setTrail] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
+  const [adoptionStats, setAdoptionStats] = useState([]);
   const audioRef = useRef(null);
   const controls = useAnimation();
+  const { theme, setTheme } = useTheme();
 
   const y = useMotionValue(0);
   const backgroundY = useTransform(y, [0, -300], [0, 100]);
+
+  useEffect(() => {
+    // Simulated adoption statistics
+    const generateAdoptionStats = () => {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return months.map(month => ({
+        month,
+        adoptions: Math.floor(Math.random() * 100) + 50
+      }));
+    };
+    setAdoptionStats(generateAdoptionStats());
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -96,16 +116,25 @@ const Index = () => {
   }, [volume]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100 p-8 overflow-hidden" onMouseMove={(e) => y.set(e.clientY)}>
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-8 overflow-hidden transition-colors duration-300" onMouseMove={(e) => y.set(e.clientY)}>
       <motion.div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')",
           backgroundPosition: "center",
           backgroundSize: "cover",
-          y: backgroundY
+          y: backgroundY,
+          opacity: theme === 'dark' ? 0.3 : 0.8,
         }}
       />
+      <motion.button
+        className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={toggleTheme}
+      >
+        {theme === 'dark' ? <Sun className="text-yellow-400" /> : <Moon className="text-purple-600" />}
+      </motion.button>
       <audio ref={audioRef} loop>
         <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg" />
       </audio>
@@ -298,7 +327,7 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="text-lg text-gray-700 text-center"
+                className="text-lg text-gray-700 dark:text-gray-300 text-center"
               >
                 {catFacts[currentFactIndex]}
               </motion.p>
@@ -306,27 +335,64 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        <div className="text-center">
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center justify-center">
+              <Chart className="mr-2 text-green-500" /> Cat Adoption Trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={adoptionStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="adoptions" stroke="#8884d8" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <div className="text-center space-y-4">
           <motion.div animate={controls}>
             <Button
               variant="outline"
               size="lg"
               onClick={handleLikeClick}
-              className="group transition-all duration-300 ease-in-out transform hover:scale-105 bg-white bg-opacity-70 backdrop-blur-md"
+              className="group transition-all duration-300 ease-in-out transform hover:scale-105 bg-white dark:bg-gray-800 bg-opacity-70 backdrop-blur-md"
             >
               <Heart className="mr-2 text-red-500 group-hover:animate-ping" />
               Show Some Love ({likes})
             </Button>
           </motion.div>
+          
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => toast.success("Thank you for considering adoption!", {
+                description: "Every cat deserves a loving home.",
+                icon: <Paw className="text-purple-500" />,
+              })}
+              className="bg-purple-500 text-white hover:bg-purple-600 dark:bg-purple-700 dark:hover:bg-purple-800"
+            >
+              Adopt a Cat
+            </Button>
+          </motion.div>
         </div>
 
         <motion.div 
-          className="mt-8 text-center text-gray-800"
+          className="mt-8 text-center text-gray-800 dark:text-gray-200"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          <p className="bg-white bg-opacity-70 backdrop-blur-md inline-block px-4 py-2 rounded-full">
+          <p className="bg-white dark:bg-gray-800 bg-opacity-70 backdrop-blur-md inline-block px-4 py-2 rounded-full">
             Made with <Heart className="inline-block text-red-500" /> by cat enthusiasts
           </p>
         </motion.div>
